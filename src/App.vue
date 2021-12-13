@@ -5,9 +5,9 @@
       <section>
         <div class="flex">
           <div class="max-w-xs">
-            <label for="wallet" class="block text-sm font-medium text-gray-700"
-              >Тикер</label
-            >
+            <label for="wallet" class="block text-sm font-medium text-gray-700">
+              Тикер
+            </label>
             <div class="mt-1 relative rounded-md shadow-md">
               <input
                 v-model="newTickerName"
@@ -56,19 +56,7 @@
             focus:ring-gray-500
           "
         >
-          <!-- Heroicon name: solid/mail -->
-          <svg
-            class="-ml-0.5 mr-2 h-6 w-6"
-            xmlns="http://www.w3.org/2000/svg"
-            width="30"
-            height="30"
-            viewBox="0 0 24 24"
-            fill="#ffffff"
-          >
-            <path
-              d="M13 7h-2v4H7v2h4v4h2v-4h4v-2h-4V7zm-1-5C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"
-            ></path>
-          </svg>
+          <icon-plus />
           Add
         </button>
       </section>
@@ -79,7 +67,7 @@
           <div
             v-for="ticker in tickers"
             :key="ticker.name"
-            @click="selectedTicer = ticker"
+            @click="selectTicker(ticker)"
             :class="{ 'border-4': ticker == selectedTicer }"
             class="
               bg-white
@@ -117,19 +105,8 @@
                 focus:outline-none
               "
             >
-              <svg
-                class="h-5 w-5"
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 20 20"
-                fill="#718096"
-                aria-hidden="true"
-              >
-                <path
-                  fill-rule="evenodd"
-                  d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z"
-                  clip-rule="evenodd"
-                ></path></svg
-              >Dellete
+              <icon-trash />
+              Delete
             </button>
           </div>
         </div>
@@ -137,40 +114,22 @@
       </template>
       <section v-if="selectedTicer" class="relative">
         <h3 class="text-lg leading-6 font-medium text-gray-900 my-8">
-          VUE - USD
+          {{ selectedTicer.name }} - USD
         </h3>
         <div class="flex items-end border-gray-600 border-b border-l h-64">
-          <div class="bg-purple-800 border w-10 h-24"></div>
-          <div class="bg-purple-800 border w-10 h-32"></div>
-          <div class="bg-purple-800 border w-10 h-48"></div>
-          <div class="bg-purple-800 border w-10 h-16"></div>
+          <div
+            v-for="(bar, idx) in normalizaGraph()"
+            :key="idx"
+            :style="{ height: `${bar}%` }"
+            class="bg-purple-800 border w-10"
+          ></div>
         </div>
         <button
           @click="selectedTicer = null"
           type="button"
           class="absolute top-0 right-0"
         >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            xmlns:xlink="http://www.w3.org/1999/xlink"
-            xmlns:svgjs="http://svgjs.com/svgjs"
-            version="1.1"
-            width="30"
-            height="30"
-            x="0"
-            y="0"
-            viewBox="0 0 511.76 511.76"
-            style="enable-background: new 0 0 512 512"
-            xml:space="preserve"
-          >
-            <g>
-              <path
-                d="M436.896,74.869c-99.84-99.819-262.208-99.819-362.048,0c-99.797,99.819-99.797,262.229,0,362.048    c49.92,49.899,115.477,74.837,181.035,74.837s131.093-24.939,181.013-74.837C536.715,337.099,536.715,174.688,436.896,74.869z     M361.461,331.317c8.341,8.341,8.341,21.824,0,30.165c-4.16,4.16-9.621,6.251-15.083,6.251c-5.461,0-10.923-2.091-15.083-6.251    l-75.413-75.435l-75.392,75.413c-4.181,4.16-9.643,6.251-15.083,6.251c-5.461,0-10.923-2.091-15.083-6.251    c-8.341-8.341-8.341-21.845,0-30.165l75.392-75.413l-75.413-75.413c-8.341-8.341-8.341-21.845,0-30.165    c8.32-8.341,21.824-8.341,30.165,0l75.413,75.413l75.413-75.413c8.341-8.341,21.824-8.341,30.165,0    c8.341,8.32,8.341,21.824,0,30.165l-75.413,75.413L361.461,331.317z"
-                fill="#718096"
-                data-original="#000000"
-              ></path>
-            </g>
-          </svg>
+          <icon-x-circle />
         </button>
       </section>
     </div>
@@ -178,18 +137,25 @@
 </template>
 
 <script>
+import IconTrash from "./components/icons/Icon-trash.vue";
+import IconPlus from "./components/icons/Icon-plus.vue";
+import IconXCircle from "./components/icons/Icon-x-circle.vue";
+
 export default {
   name: "App",
 
+  components: {
+    IconTrash,
+    IconPlus,
+    IconXCircle,
+  },
+
   data() {
     return {
-      newTickerName: "default",
-      tickers: [
-        { name: "DEMO1", price: "-" },
-        { name: "DEMO2", price: "2" },
-        { name: "DEMO3", price: "-" },
-      ],
+      newTickerName: "",
+      tickers: [],
       selectedTicer: null,
+      graph: [],
     };
   },
 
@@ -201,13 +167,52 @@ export default {
       };
 
       this.tickers.push(newTicker);
+
+      setInterval(async () => {
+        const f = await fetch(
+          `https://min-api.cryptocompare.com/data/price?fsym=${newTicker.name}&tsyms=USD&api_key=ce3fd966e7a1d10d65f907b20bf000552158fd3ed1bd614110baa0ac6cb57a7e`
+        );
+        const data = await f.json();
+        newTicker.price = data.USD;
+        console.log(data);
+
+        if (this.selectedTicer == newTicker) {
+          this.graph.push(data.USD);
+        }
+      }, 10000);
+      // https://min-api.cryptocompare.com/data/all/coinlist?summary=true
       this.newTickerName = "";
+    },
+
+    selectTicker(ticker) {
+      this.selectedTicer = ticker;
+      this.graph = [];
     },
 
     handleDelete(tickerToRemove) {
       this.tickers = this.tickers.filter((t) => t !== tickerToRemove);
       if (tickerToRemove == this.selectedTicer) {
         this.selectedTicer = null;
+      }
+    },
+
+    normalizaGraph() {
+      if (!this.graph.length) return;
+      const maxPrice = Math.max(...this.graph);
+      const minPrice = Math.min(...this.graph);
+
+      if (this.graph.length == 1 || maxPrice == minPrice) {
+        return this.graph.map(() => 50);
+      } else {
+        return this.graph.map((price) => {
+          if (price == minPrice) {
+            return 5;
+          } else if (price == maxPrice) {
+            return 95;
+          } else {
+            return ((price - minPrice) * 95) / (maxPrice - minPrice);
+          }
+        });
       }
     },
   },
