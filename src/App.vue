@@ -6,9 +6,9 @@
         <div class="flex flex-col">
           <div class="max-w-xs">
             <label for="wallet" class="block text-sm font-medium text-gray-700">
-              Тикер
+              Ticker
             </label>
-            <div class="mt-1 relative rounded-md shadow-md">
+            <div class="flex mt-1 relative rounded-md shadow-md">
               <input
                 v-model="newTickerName"
                 @keydown.enter="add(newTickerName)"
@@ -27,8 +27,36 @@
                   sm:text-sm
                   rounded-md
                 "
-                placeholder="Например DOGE"
+                placeholder="Example DOGE"
               />
+              <button
+                @click="add(newTickerName)"
+                type="button"
+                class="
+                  inline-flex
+                  items-center
+                  py-2
+                  px-4
+                  border border-transparent
+                  shadow-sm
+                  text-sm
+                  leading-4
+                  font-medium
+                  rounded-full
+                  text-white
+                  bg-gray-600
+                  hover:bg-gray-700
+                  transition-colors
+                  duration-300
+                  focus:outline-none
+                  focus:ring-2
+                  focus:ring-offset-2
+                  focus:ring-gray-500
+                "
+              >
+                <icon-plus />
+                Add
+              </button>
             </div>
           </div>
           <p v-if="isTickerExist" class="text-xs text-red-500">
@@ -51,46 +79,40 @@
                 uppercase
                 font-semibold
               "
-              >{{ key.Symbol }}</span
-            >
+              >{{ key.Symbol }}
+            </span>
           </div>
         </div>
-        <button
-          @click="add(newTickerName)"
-          type="button"
-          class="
-            my-4
-            inline-flex
-            items-center
-            py-2
-            px-4
-            border border-transparent
-            shadow-sm
-            text-sm
-            leading-4
-            font-medium
-            rounded-full
-            text-white
-            bg-gray-600
-            hover:bg-gray-700
-            transition-colors
-            duration-300
-            focus:outline-none
-            focus:ring-2
-            focus:ring-offset-2
-            focus:ring-gray-500
-          "
-        >
-          <icon-plus />
-          Add
-        </button>
       </section>
 
       <template v-if="tickers.length">
         <hr class="w-full border-t border-gray-600 my-4" />
+        <div class="flex justify-center items-center">
+          <label
+            for="filter"
+            class="block text-sm font-medium text-gray-700 mr-2"
+          >
+            Filter
+          </label>
+          <input
+            v-model="filter"
+            type="text"
+            id="filter"
+            class="
+              block
+              pr-10
+              border-gray-300
+              text-gray-900
+              focus:outline-none focus:ring-gray-500 focus:border-gray-500
+              sm:text-sm
+              rounded-md
+              shadow-md
+            "
+          />
+        </div>
         <div class="mt-5 grid grid-cols-1 gap-5 sm:grid-cols-3">
           <div
-            v-for="ticker in tickers"
+            v-for="ticker in filteredTickers()"
             :key="ticker.name"
             @click="selectTicker(ticker)"
             :class="{ 'border-4': ticker == selectedTicer }"
@@ -134,6 +156,66 @@
               Delete
             </button>
           </div>
+        </div>
+        <div class="flex my-5 justify-center items-center">
+          <button
+            type="button"
+            @click="page--"
+            :class="{ 'disabled:opacity-75': page == 1 }"
+            class="
+              mr-5
+              inline-flex
+              items-center
+              py-2
+              px-4
+              border border-transparent
+              shadow-sm
+              text-sm
+              leading-4
+              font-medium
+              rounded-full
+              text-white
+              bg-gray-600
+              hover:bg-gray-700
+              transition-colors
+              duration-300
+              focus:outline-none
+              focus:ring-2
+              focus:ring-offset-2
+              focus:ring-gray-500
+            "
+          >
+            Prev
+          </button>
+          <button
+            type="button"
+            @click="page++"
+            :class="{ 'disabled:opacity-75': hasNextPage }"
+            class="
+              ml-5
+              inline-flex
+              items-center
+              py-2
+              px-4
+              border border-transparent
+              shadow-sm
+              text-sm
+              leading-4
+              font-medium
+              rounded-full
+              text-white
+              bg-gray-600
+              hover:bg-gray-700
+              transition-colors
+              duration-300
+              focus:outline-none
+              focus:ring-2
+              focus:ring-offset-2
+              focus:ring-gray-500
+            "
+          >
+            Next
+          </button>
         </div>
         <hr class="w-full border-t border-gray-600 my-4" />
       </template>
@@ -184,6 +266,9 @@ export default {
       cryptoList: [],
       keys: [],
       isTickerExist: false,
+      filter: "",
+      page: 1,
+      hasNextPage: true,
     };
   },
   beforeCreate: function () {
@@ -219,10 +304,21 @@ export default {
         const data = await f.json();
         ticker.price = data.USD;
 
-        if (this.selectedTicer == ticker.name) {
+        if (this.selectedTicer.name == ticker.name) {
           this.graph.push(data.USD);
         }
       }, 10000);
+    },
+
+    filteredTickers() {
+      const first = (this.page - 1) * 6;
+      const last = this.page * 6;
+
+      const filteredTickers = this.tickers.filter((ticker) =>
+        ticker.name.includes(this.filter.toUpperCase())
+      );
+      this.hasNextPage = filteredTickers.length > last;
+      return filteredTickers.slice(first, last);
     },
 
     add(tickerName) {
@@ -244,6 +340,7 @@ export default {
 
       this.subscribeToUdate(newTicker);
       this.newTickerName = "";
+      this.filter = "";
     },
 
     selectTicker(ticker) {
@@ -276,6 +373,12 @@ export default {
           }
         });
       }
+    },
+  },
+
+  watch: {
+    filter() {
+      this.page = 1;
     },
   },
 };
