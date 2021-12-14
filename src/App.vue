@@ -3,7 +3,7 @@
     <div class="container">
       <div class="w-full my-4"></div>
       <section>
-        <div class="flex">
+        <div class="flex flex-col">
           <div class="max-w-xs">
             <label for="wallet" class="block text-sm font-medium text-gray-700">
               Тикер
@@ -11,7 +11,9 @@
             <div class="mt-1 relative rounded-md shadow-md">
               <input
                 v-model="newTickerName"
-                @keydown.enter="add"
+                @keydown.enter="add(newTickerName)"
+                @input="searchForSimilarTickers"
+                :class="{ 'focus:border-red-500': isTickerExist }"
                 type="text"
                 name="wallet"
                 id="wallet"
@@ -29,9 +31,32 @@
               />
             </div>
           </div>
+          <p v-if="isTickerExist" class="text-xs text-red-500">
+            This ticker already exists
+          </p>
+          <div class="my-2">
+            <span
+              v-for="key in keys"
+              :key="key.Symbol"
+              @click="add(key.Symbol)"
+              class="
+                py-0
+                px-2
+                mr-2
+                text-sm
+                cursor-pointer
+                border border-transparent
+                bg-gray-300
+                rounded-full
+                uppercase
+                font-semibold
+              "
+              >{{ key.Symbol }}</span
+            >
+          </div>
         </div>
         <button
-          @click="add"
+          @click="add(newTickerName)"
           type="button"
           class="
             my-4
@@ -156,13 +181,39 @@ export default {
       tickers: [],
       selectedTicer: null,
       graph: [],
+      cryptoList: [],
+      keys: [],
+      isTickerExist: false,
     };
+  },
+  beforeCreate: function () {
+    fetch("https://min-api.cryptocompare.com/data/all/coinlist?summary=true")
+      .then((response) => response.json())
+      .then((data) => (this.cryptoList = Object.values(data.Data)));
   },
 
   methods: {
-    add() {
+    searchForSimilarTickers() {
+      this.isTickerExist = false;
+      const filteredCrytoList = this.cryptoList.filter((e) =>
+        e.FullName.toLocaleUpperCase().includes(
+          this.newTickerName.toUpperCase()
+        )
+      );
+      this.keys = filteredCrytoList.slice(0, 10);
+    },
+
+    add(tickerName) {
+      tickerName = tickerName.toUpperCase();
+
+      if (this.tickers.some((e) => e.name == tickerName)) {
+        this.isTickerExist = true;
+        this.ticker = tickerName;
+        return;
+      }
+
       const newTicker = {
-        name: this.newTickerName,
+        name: tickerName,
         price: "-",
       };
 
@@ -170,7 +221,7 @@ export default {
 
       setInterval(async () => {
         const f = await fetch(
-          `https://min-api.cryptocompare.com/data/price?fsym=${newTicker.name}&tsyms=USD&api_key=ce3fd966e7a1d10d65f907b20bf000552158fd3ed1bd614110baa0ac6cb57a7e`
+          `https://min-api.cryptocompare.com/data/price?fsym=${newTicker.name}&tsyms=USD`
         );
         const data = await f.json();
         newTicker.price = data.USD;
@@ -180,7 +231,6 @@ export default {
           this.graph.push(data.USD);
         }
       }, 10000);
-      // https://min-api.cryptocompare.com/data/all/coinlist?summary=true
       this.newTickerName = "";
     },
 
